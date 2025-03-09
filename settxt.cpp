@@ -1,33 +1,41 @@
 #include "settxt.h"
 
-void settxt::getTxtmap(const string& txtname)
-{
-	txtmap.clear();
-	ifstream txt(txtname);
-	string curLine;
-
-	if (!txt.is_open()) {
-		cerr << "Can not open the file named : " << txtname << endl;
-		return;
-	}
-
-	while (getline(txt, curLine)){
-		int pos = curLine.find(":");
-		if (pos != string::npos) {
-			string index = curLine.substr(0, pos);
-			string target = curLine.substr(pos + 1);
-			txtmap.insert({ index, target });
-		}
-	}
-
-	txt.close();
+settxt::settxt(const std::string& txtname) {
+    getTxtmap(txtname);
 }
 
-string settxt::getValue(const string& key, string defValue)
+void settxt::getTxtmap(const std::string& txtname)
 {
-	auto it = txtmap.find(key);
-	if (it != txtmap.end()) {
-		return it->second;
-	}
-	return defValue;
+    txtmap.clear();
+    std::ifstream txt(txtname);
+    std::string curLine;
+
+    if (!txt.is_open()) {
+        std::cerr << "Cannot open the file: " << txtname << std::endl;
+        return;
+    }
+
+    while (std::getline(txt, curLine)) {
+        size_t pos = curLine.find(':');
+        if (pos != std::string::npos) {
+            std::string index = curLine.substr(0, pos);
+            std::string target = curLine.substr(pos + 1);
+
+            // 移除前後空白
+            index.erase(0, index.find_first_not_of(" \t\r\n"));
+            index.erase(index.find_last_not_of(" \t\r\n") + 1);
+            target.erase(0, target.find_first_not_of(" \t\r\n"));
+            target.erase(target.find_last_not_of(" \t\r\n") + 1);
+
+            txtmap[std::move(index)] = std::move(target);
+        }
+    }
+
+    txt.close();
+}
+
+std::string settxt::getValue(const std::string& key, const std::string& defValue) const
+{
+    auto it = txtmap.find(key);
+    return (it != txtmap.end()) ? it->second : defValue;
 }
